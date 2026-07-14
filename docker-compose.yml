@@ -1,30 +1,31 @@
-version: '3.8'
-
 services:
+  # 1. Banco de Dados MySQL
   agro_db:
     image: mysql:8.0
     container_name: agro_mysql_container
     restart: always
+    command: --lower_case_table_names=1
     environment:
       MYSQL_ROOT_PASSWORD: mysql
       MYSQL_DATABASE: agro_telemetria
     ports:
-      - "3306:3306"
+      - "3309:3306"
     volumes:
       - db_data:/var/lib/mysql
       - ./initdb:/docker-entrypoint-initdb.d 
 
+  # 2. O seu pipeline ETL em Python (DDD) compilado localmente
   agro_etl:
-    # Em vez de 'build: ./ETL', você puxa direto do Docker Hub
-    image: seu_usuario_dockerhub/agro-etl:latest
+    build: ./ETL # Aponta para a pasta onde está o Dockerfile do seu ETL
     container_name: agro_etl_container
     restart: always
     depends_on:
       - agro_db
     environment:
+      - PYTHONUNBUFFERED=1
       - DB_HOST=agro_db
       - DB_USER=root
-      - DB_PASSWORD=root_password_aqui
+      - DB_PASSWORD=mysql
       - DB_NAME=agro_telemetria
       - MQTT_BROKER=broker.hivemq.com
       - MQTT_PORT=1883

@@ -1,3 +1,4 @@
+import time
 import mysql.connector
 from domain.models import LeituraMicroclima
 from application.interfaces import ITelemetriaRepository
@@ -9,19 +10,29 @@ class MySQLTelemetriaRepository(ITelemetriaRepository):
 
     def salvar(self, leitura: LeituraMicroclima) -> None:
         conexao = None
-        try:
-            conexao = mysql.connector.connect(**self.config)
-            cursor = conexao.cursor()
-            
-            sql = "INSERT INTO telemetria_microclima (temperatura, umidade, timestamp) VALUES (%s, %s, %s)"
-            valores = (leitura.temperatura, leitura.umidade, leitura.timestamp)
-            
-            cursor.execute(sql, valores)
-            conexao.commit()
-        except mysql.connector.Error as err:
-            print(f"Erro de Infraestrutura (MySQL): {err}")
-            raise err
-        finally:
-            if conexao and conexao.is_connected():
-                cursor.close()
-                conexao.close()
+        tentativas = 5
+        intervalo = 3 
+        
+        for tentativa in range(tentativas):
+            try:
+                conexao = mysql.connector.connect(**self.config)
+                cursor = conexao.cursor()
+                
+                sql = "INSERT INTO telemetria_microclima (temperatura, umidade, timestamp) VALUES (%s, %s, %s)"
+                valores = (leitura.temperatura, leitura.umidade, leitura.timestamp)
+                
+                cursor.execute(sql, valores)
+                conexao.commit()
+                break # Sucesso! Sai do laço de repetição
+                
+            except mysql.connector.Error as err:
+                print(f"Tentativa {tentativa + 1}/{tentativas} falhou. Banco pode estar inicializando...")
+                if tentativa == tentativas - 1:
+                    print(f"Erro definitivo de Infraestrutura (MySQL): {err}")
+                    raise err
+                time.sleep(intervalo) # Aguarda o banco respirar
+                
+            finally:
+                if conexao and conexao.is_connected():
+                    cursor.close()
+                    conexao.close()

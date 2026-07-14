@@ -11,12 +11,15 @@ class MqttConsumer:
         self.topic = topic
         self.use_case = use_case
         
-        self.client = mqtt.Client()
+        # AJUSTE AQUI: Declarando a versão da API para compatibilidade com o paho-mqtt 2.x
+        self.client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+        
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
 
     def _on_connect(self, client, userdata, flags, rc):
-        print(f"Conectado ao Broker MQTT. Assinando tópico: {self.topic}")
+        # Imprime o código de retorno para ajudar no debug se algo falhar
+        print(f"Conectado ao Broker MQTT (Código: {rc}). Assinando tópico: {self.topic}")
         client.subscribe(self.topic)
 
     def _on_message(self, client, userdata, msg):
@@ -31,5 +34,6 @@ class MqttConsumer:
             print("Erro de Infraestrutura: Falha ao decodificar JSON.")
 
     def iniciar(self):
+        print(f"Tentando conectar no broker {self.broker} na porta {self.port}...")
         self.client.connect(self.broker, self.port, 60)
         self.client.loop_forever()
