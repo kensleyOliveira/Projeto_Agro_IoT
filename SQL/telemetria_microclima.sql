@@ -14,3 +14,5 @@ ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'mysql';
 GRANT ALL PRIVILEGES ON agro_telemetria.* TO 'root'@'%';
 
 FLUSH PRIVILEGES;
+
+SELECT * FROM telemetria_microclima;

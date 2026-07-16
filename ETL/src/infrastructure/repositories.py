@@ -23,14 +23,14 @@ class MySQLTelemetriaRepository(ITelemetriaRepository):
                 
                 cursor.execute(sql, valores)
                 conexao.commit()
-                break # Sucesso! Sai do laço de repetição
+                break
                 
             except mysql.connector.Error as err:
                 print(f"Tentativa {tentativa + 1}/{tentativas} falhou. Banco pode estar inicializando...")
                 if tentativa == tentativas - 1:
                     print(f"Erro definitivo de Infraestrutura (MySQL): {err}")
                     raise err
-                time.sleep(intervalo) # Aguarda o banco respirar
+                time.sleep(intervalo) 
                 
             finally:
                 if conexao and conexao.is_connected():

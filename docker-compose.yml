@@ -8,6 +8,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: mysql
       MYSQL_DATABASE: agro_telemetria
+      TZ: America/Sao_Paulo              
     ports:
       - "3309:3306"
     volumes:
@@ -16,7 +17,7 @@ services:
 
   # 2. O seu pipeline ETL em Python (DDD) compilado localmente
   agro_etl:
-    build: ./ETL # Aponta para a pasta onde está o Dockerfile do seu ETL
+    build: ./ETL 
     container_name: agro_etl_container
     restart: always
     depends_on:
@@ -24,10 +25,11 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=agro_db
-      - DB_PORT=3306
+      - DB_PORT=3306                  
       - DB_USER=root
       - DB_PASSWORD=mysql
       - DB_NAME=agro_telemetria
+      - TZ=America/Sao_Paulo          
       - MQTT_BROKER=broker.hivemq.com
       - MQTT_PORT=1883
       - MQTT_TOPIC=kensley/fazenda/soja/telemetria
