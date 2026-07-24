@@ -35,13 +35,12 @@ export default function PlataformaTelemetria() {
       const response = await fetch(url);
       const result = await response.json();
       
-      if (result.success) {
+     if (result.success) {
         const dadosInvertidos = result.data.reverse(); 
 
         const dadosFormatados = dadosInvertidos.map(item => {
-          // Apenas convertemos para data e formatamos, sem subtrair os 180 minutos
           const dataStringFormatada = item.timestamp.replace(" ", "T");
-          const dataObjeto = new Date(dataStringFormatada);
+          const dataObjeto = new Date(dataStringFormatada + "Z");
 
           return {
             ...item,

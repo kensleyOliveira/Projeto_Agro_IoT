@@ -1,16 +1,15 @@
 import mysql from 'mysql2/promise';
 
-
 const pool = mysql.createPool({
-  host: 'localhost',      
-  port: 3309,              
-  user: 'root',            
-  password: 'mysql', 
-  database: 'agro_telemetria',
+  host: process.env.DB_HOST || 'localhost',      
+  port: parseInt(process.env.DB_PORT || '3309', 10),              
+  user: process.env.DB_USER || 'root',            
+  password: process.env.DB_PASSWORD || 'mysql', 
+  database: process.env.DB_NAME || 'agro_telemetria',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  timezone: 'local', 
+  timezone: 'Z', // Configuração ideal para lidar com DATETIME e fuso-horários globais
   dateStrings: true   
 });
 

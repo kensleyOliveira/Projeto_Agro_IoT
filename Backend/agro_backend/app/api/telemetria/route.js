@@ -16,7 +16,7 @@ export async function GET(request) {
       queryParams.push(`${dataInicio} 00:00:00`, `${dataFim} 23:59:59`);
     }
 
-    query += ` ORDER BY timestamp DESC LIMIT 5000`;
+    query += ` ORDER BY timestamp DESC LIMIT 15000`;
 
     const [rows] = await pool.query(query, queryParams);
 
