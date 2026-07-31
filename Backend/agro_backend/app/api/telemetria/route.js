@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import supabase from '@/lib/db';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -8,21 +7,27 @@ export async function GET(request) {
   const dataFim = searchParams.get('fim');
 
   try {
-    let query = `SELECT id, temperatura, umidade, timestamp FROM telemetria_microclima`;
-    let queryParams = [];
+    let query = supabase
+      .from('telemetria_microclima')
+      .select('id, temperatura, umidade, timestamp')
+      .order('timestamp', { ascending: false })
+      .limit(10000); 
 
     if (dataInicio && dataFim) {
-      query += ` WHERE timestamp BETWEEN ? AND ?`;
-      queryParams.push(`${dataInicio} 00:00:00`, `${dataFim} 23:59:59`);
+      query = query
+        .gte('timestamp', `${dataInicio}T00:00:00.000Z`)
+        .lte('timestamp', `${dataFim}T23:59:59.999Z`);
     }
 
-    query += ` ORDER BY timestamp DESC LIMIT 15000`;
+    const { data, error } = await query;
 
-    const [rows] = await pool.query(query, queryParams);
+    if (error) {
+      throw error;
+    }
 
-    return NextResponse.json({ success: true, data: rows }, { status: 200 });
+    return NextResponse.json({ success: true, data: data }, { status: 200 });
   } catch (error) {
-    console.error("Erro ao buscar dados do MySQL:", error);
-    return NextResponse.json({ success: false, message: 'Erro interno.' }, { status: 500 });
+    console.error("Erro ao buscar dados do Supabase:", error);
+    return NextResponse.json({ success: false, message: 'Erro interno na API.' }, { status: 500 });
   }
 }
