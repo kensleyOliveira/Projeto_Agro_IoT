@@ -9,7 +9,7 @@ export async function GET(request) {
   try {
     let query = supabase
       .from('telemetria_microclima')
-      .select('id, temperatura, umidade, timestamp')
+      .select('id, temperatura, h, timestamp')
       .order('timestamp', { ascending: false })
       .limit(10000); 
 
