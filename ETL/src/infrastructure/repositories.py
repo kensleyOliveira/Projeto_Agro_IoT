@@ -1,9 +1,9 @@
 import time
-import mysql.connector
+import psycopg2
 from domain.models import LeituraMicroclima
 from application.interfaces import ITelemetriaRepository
 
-class MySQLTelemetriaRepository(ITelemetriaRepository):
+class PostgresTelemetriaRepository(ITelemetriaRepository):
        
     def __init__(self, db_config: dict):
         self.config = db_config
@@ -15,24 +15,29 @@ class MySQLTelemetriaRepository(ITelemetriaRepository):
         
         for tentativa in range(tentativas):
             try:
-                conexao = mysql.connector.connect(**self.config)
+                # Conecta ao PostgreSQL do Supabase
+                conexao = psycopg2.connect(**self.config)
                 cursor = conexao.cursor()
                 
-                sql = "INSERT INTO telemetria_microclima (temperatura, umidade, timestamp) VALUES (%s, %s, %s)"
+                # Query adaptada com sintaxe padrão ANSI/Postgres
+                sql = """
+                    INSERT INTO telemetria_microclima (temperatura, umidade, timestamp) 
+                    VALUES (%s, %s, %s);
+                """
                 valores = (leitura.temperatura, leitura.umidade, leitura.timestamp)
                 
                 cursor.execute(sql, valores)
                 conexao.commit()
+                cursor.close()
                 break
                 
-            except mysql.connector.Error as err:
-                print(f"Tentativa {tentativa + 1}/{tentativas} falhou. Banco pode estar inicializando...")
+            except Exception as err:
+                print(f"⚠️ [Infra] Tentativa {tentativa + 1}/{tentativas} falhou ao conectar ao Supabase...")
                 if tentativa == tentativas - 1:
-                    print(f"Erro definitivo de Infraestrutura (MySQL): {err}")
+                    print(f"❌ Erro definitivo de Infraestrutura (PostgreSQL): {err}")
                     raise err
                 time.sleep(intervalo) 
                 
             finally:
-                if conexao and conexao.is_connected():
-                    cursor.close()
+                if conexao:
                     conexao.close()
