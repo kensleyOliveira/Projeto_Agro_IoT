@@ -8,14 +8,16 @@ from infrastructure.mqtt_adapter import MqttConsumer
 CAMINHO_SRC = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_RAIZ = os.path.dirname(CAMINHO_SRC)
 CAMINHO_ENV = os.path.join(CAMINHO_RAIZ, '.env.local')
-load_dotenv(CAMINHO_ENV)
+
+if os.path.exists(CAMINHO_ENV):
+    load_dotenv(CAMINHO_ENV)
 
 if __name__ == "__main__":
     print("==================================================")
     print("🚀 Iniciando Pipeline Cloud-Native com DDD (AgroStock)")
     print("==================================================")
         
-    # Configurações do Banco de Dados MySQL no Railway (sem senhas hardcoded)
+    # Configurações do Banco de Dados MySQL
     db_config = {
         'host': os.getenv('MYSQLHOST'), 
         'port': int(os.getenv('MYSQLPORT', 3306)), 
@@ -24,18 +26,17 @@ if __name__ == "__main__":
         'database': os.getenv('MYSQLDATABASE')  
     }
 
-    # Configurações do MQTT HiveMQ (sem senhas hardcoded)
+    # Configurações do MQTT HiveMQ
     mqtt_broker = os.getenv('MQTT_BROKER')
     mqtt_port = int(os.getenv('MQTT_PORT', 8883)) 
     mqtt_user = os.getenv('MQTT_USER')
     mqtt_password = os.getenv('MQTT_PASSWORD')
     mqtt_topic = os.getenv('MQTT_TOPIC')
     
-    # Validação de Segurança: Trava a execução se as variáveis não forem carregadas
+    # Validação de Segurança
     if not all([db_config['host'], db_config['password'], mqtt_broker, mqtt_password]):
         print("💥 Erro de Ambiente: Credenciais ausentes.")
-        print(f"O script procurou o arquivo em: {CAMINHO_ENV}")
-        print("Verifique se as variáveis estão preenchidas corretamente.")
+        print("Verifique se TODAS as variáveis (MySQL e MQTT) estão cadastradas na aba 'Variables' do Railway.")
         sys.exit(1)
 
     print(f"📡 Target Broker: {mqtt_broker}:{mqtt_port} | Tópico: '{mqtt_topic}'")
