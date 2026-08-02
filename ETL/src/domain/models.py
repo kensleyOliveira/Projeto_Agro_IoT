@@ -10,7 +10,7 @@ from domain.exceptions import (
 class LeituraMicroclima:
     temperatura: float
     umidade: float
-    timestamp: datetime = None
+    data_hora: datetime = None
 
     def __post_init__(self):
         """
@@ -26,5 +26,5 @@ class LeituraMicroclima:
         if not (0.0 <= self.umidade <= 100.0):
             raise UmidadeInvalidaException(self.umidade)
             
-        if self.timestamp is None:
-            self.timestamp = datetime.now()
+        if self.data_hora is None:
+            self.data_hora = datetime.now()

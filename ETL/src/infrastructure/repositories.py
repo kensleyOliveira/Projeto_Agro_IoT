@@ -1,9 +1,9 @@
 import time
-import psycopg2
+import mysql.connector
 from domain.models import LeituraMicroclima
 from application.interfaces import ITelemetriaRepository
 
-class PostgresTelemetriaRepository(ITelemetriaRepository):
+class MysqlTelemetriaRepository(ITelemetriaRepository):
        
     def __init__(self, db_config: dict):
         self.config = db_config
@@ -15,16 +15,16 @@ class PostgresTelemetriaRepository(ITelemetriaRepository):
         
         for tentativa in range(tentativas):
             try:
-                # Conecta ao PostgreSQL do Supabase
-                conexao = psycopg2.connect(**self.config)
+                # Conecta ao MySQL do Railway
+                conexao = mysql.connector.connect(**self.config)
                 cursor = conexao.cursor()
                 
-                # Query adaptada com sintaxe padrão ANSI/Postgres
+                # Query adaptada para a estrutura do banco (usando a coluna 'h')
                 sql = """
-                    INSERT INTO telemetria_microclima (temperatura, umidade, timestamp) 
+                    INSERT INTO telemetria_microclima (temperatura, h, data_hora) 
                     VALUES (%s, %s, %s);
                 """
-                valores = (leitura.temperatura, leitura.umidade, leitura.timestamp)
+                valores = (leitura.temperatura, leitura.umidade, leitura.data_hora)
                 
                 cursor.execute(sql, valores)
                 conexao.commit()
@@ -32,12 +32,12 @@ class PostgresTelemetriaRepository(ITelemetriaRepository):
                 break
                 
             except Exception as err:
-                print(f"⚠️ [Infra] Tentativa {tentativa + 1}/{tentativas} falhou ao conectar ao Supabase...")
+                print(f"⚠️ [Infra] Tentativa {tentativa + 1}/{tentativas} falhou ao conectar ao MySQL no Railway...")
                 if tentativa == tentativas - 1:
-                    print(f"❌ Erro definitivo de Infraestrutura (PostgreSQL): {err}")
+                    print(f"❌ Erro definitivo de Infraestrutura (MySQL): {err}")
                     raise err
                 time.sleep(intervalo) 
                 
             finally:
-                if conexao:
+                if conexao and conexao.is_connected():
                     conexao.close()

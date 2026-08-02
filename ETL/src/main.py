@@ -1,35 +1,50 @@
 import os
 import sys
-from infrastructure.repositories import PostgresTelemetriaRepository
+from dotenv import load_dotenv
+from infrastructure.repositories import MysqlTelemetriaRepository
 from application.use_cases import ProcessarLeituraUseCase
 from infrastructure.mqtt_adapter import MqttConsumer
+
+CAMINHO_SRC = os.path.dirname(os.path.abspath(__file__))
+CAMINHO_RAIZ = os.path.dirname(CAMINHO_SRC)
+CAMINHO_ENV = os.path.join(CAMINHO_RAIZ, '.env.local')
+load_dotenv(CAMINHO_ENV)
 
 if __name__ == "__main__":
     print("==================================================")
     print("🚀 Iniciando Pipeline Cloud-Native com DDD (AgroStock)")
     print("==================================================")
         
+    # Configurações do Banco de Dados MySQL no Railway (sem senhas hardcoded)
     db_config = {
-        'host': os.getenv('DB_HOST', 'aws-0-sa-east-1.pooler.supabase.com'), 
-        'port': int(os.getenv('DB_PORT', 6543)), 
-        'user': os.getenv('DB_USER', 'postgres.bubejagemuavlpkmiabc'),  
-        'password': os.getenv('DB_PASSWORD', 'UE5S8DxTTAKpudhc'), 
-        'database': os.getenv('DB_NAME', 'postgres')  
+        'host': os.getenv('MYSQLHOST'), 
+        'port': int(os.getenv('MYSQLPORT', 3306)), 
+        'user': os.getenv('MYSQLUSER'),  
+        'password': os.getenv('MYSQLPASSWORD'), 
+        'database': os.getenv('MYSQLDATABASE')  
     }
 
-    mqtt_broker = os.getenv('MQTT_BROKER', '16faa5db8a444e2188dc03acb0032661.s1.eu.hivemq.cloud')
+    # Configurações do MQTT HiveMQ (sem senhas hardcoded)
+    mqtt_broker = os.getenv('MQTT_BROKER')
     mqtt_port = int(os.getenv('MQTT_PORT', 8883)) 
-    mqtt_user = os.getenv('MQTT_USER', 'agro_worker')
-    mqtt_password = os.getenv('MQTT_PASSWORD', 'Jatoba@1972')
-    mqtt_topic = os.getenv('MQTT_TOPIC', 'kensley/fazenda/soja/telemetria')
+    mqtt_user = os.getenv('MQTT_USER')
+    mqtt_password = os.getenv('MQTT_PASSWORD')
+    mqtt_topic = os.getenv('MQTT_TOPIC')
     
+    # Validação de Segurança: Trava a execução se as variáveis não forem carregadas
+    if not all([db_config['host'], db_config['password'], mqtt_broker, mqtt_password]):
+        print("💥 Erro de Ambiente: Credenciais ausentes.")
+        print(f"O script procurou o arquivo em: {CAMINHO_ENV}")
+        print("Verifique se as variáveis estão preenchidas corretamente.")
+        sys.exit(1)
+
     print(f"📡 Target Broker: {mqtt_broker}:{mqtt_port} | Tópico: '{mqtt_topic}'")
     print(f"🛢️ Target Database Cloud: {db_config['host']} | DB: {db_config['database']}")
 
     try:
-        repositorio_postgres = PostgresTelemetriaRepository(db_config)
+        repositorio_mysql = MysqlTelemetriaRepository(db_config)
         
-        caso_de_uso = ProcessarLeituraUseCase(repository=repositorio_postgres)
+        caso_de_uso = ProcessarLeituraUseCase(repository=repositorio_mysql)
 
         consumidor_mqtt = MqttConsumer(
             broker=mqtt_broker,
