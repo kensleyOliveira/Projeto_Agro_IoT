@@ -1,12 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
+import mysql from 'mysql2/promise';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const pool = mysql.createPool({
+  host: process.env.MYSQLHOST,
+  port: process.env.MYSQLPORT || 3306,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-if (!supabaseUrl || !supabaseKey) {
-  console.warn("Aviso: Variáveis de ambiente do Supabase não encontradas.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export default supabase;
+export default pool;
